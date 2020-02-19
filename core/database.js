@@ -69,7 +69,7 @@ class Database {
     discover (options = {}) {
         const discover = new Autodiscover({
             database: this.options,
-            discover: _.defaultsDeep({}, options, defaultDiscoverOptions)
+            discover: _.defaultsDeep({}, options, this.options.discover || {}, defaultDiscoverOptions)
         });
 
         return discover

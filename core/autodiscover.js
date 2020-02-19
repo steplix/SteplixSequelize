@@ -11,12 +11,14 @@ const DataTypes = Sequelize.DataTypes; // eslint-disable-line no-unused-vars
 const sequelize = Sequelize; // eslint-disable-line no-unused-vars
 
 const defaultOptions = {
-    mapping: {},
-    models: {
-        mapName: _.identity
-    },
-    fields: {
-        logicalDeleteFieldName: 'active'
+    discover: {
+        mapping: {},
+        models: {
+            mapNameKey: _.identity
+        },
+        fields: {
+            logicalDeleteFieldName: 'active'
+        }
     }
 };
 
@@ -112,23 +114,23 @@ class Discoverer {
 
         // Checking if options.fields.logicalDeleteFieldName attribute exists. In that case, deletion method will be by boolean.
         table.logicalDelete = {
-            enabled: table.fields.includes(this.options.fields.logicalDeleteFieldName),
-            fieldName: this.options.fields.logicalDeleteFieldName
+            enabled: table.fields.includes(this.options.discover.fields.logicalDeleteFieldName),
+            fieldName: this.options.discover.fields.logicalDeleteFieldName
         };
 
         // Get the children: this will find all related tables (ex. 'users' > ['user_attributes'])
         table.children = _.map(_.filter(definitions, definition => _.startsWith(definition.tableName, `${table.nomenclature.relationship}_`)), 'tableName');
 
         // Resolve table options (hidden, cast, rename)
-        if (this.options.models[table.model]) {
-            if (this.options.models[table.model].hidden) {
-                table.hidden = this.options.models[table.model].hidden;
+        if (this.options.discover.models[table.model]) {
+            if (this.options.discover.models[table.model].hidden) {
+                table.hidden = this.options.discover.models[table.model].hidden;
             }
-            if (this.options.models[table.model].cast) {
-                table.cast = this.options.models[table.model].cast;
+            if (this.options.discover.models[table.model].cast) {
+                table.cast = this.options.discover.models[table.model].cast;
             }
-            if (this.options.models[table.model].rename) {
-                table.rename = this.options.models[table.model].rename;
+            if (this.options.discover.models[table.model].rename) {
+                table.rename = this.options.discover.models[table.model].rename;
             }
         }
 
@@ -176,8 +178,8 @@ class Discoverer {
                         let child = pluralize.plural(field.slice(3));
 
                         // Resolve child table mapping
-                        if (this.options.mapping[child]) {
-                            child = this.options.mapping[child];
+                        if (this.options.discover.mapping[child]) {
+                            child = this.options.discover.mapping[child];
                         }
                         table.relationships.one.push(child);
                     }
@@ -191,7 +193,7 @@ class Discoverer {
         const models = this.data.models;
         const classes = this.data.classes;
         const sequelize = this.sequelize = this.sequelize || new Sequelize(this.options.database);
-        const name = this.options.models.mapName(table.model);
+        const name = this.options.discover.models.mapNameKey(table.model);
 
         // Define getter and setter for model class. This allows to extend the functionality of the model.
         classes[name] = classes[name] || Model;
