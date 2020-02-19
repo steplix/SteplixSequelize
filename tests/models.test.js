@@ -174,4 +174,63 @@ describe('Real world', () => {
             })
             .catch(done);
     });
+
+    it('should transaction found', done => {
+        database = new Database(defaultOptions);
+        database
+            .discover()
+            .then(result => {
+                let data = {
+                    active: 1
+                };
+
+                return result.models.users.transaction(transaction => {
+                    return result.models.users
+                        .create(data, { transaction })
+                        .then(user => {
+                            expect(user).to.have.property('active').to.be.a('number').equal(1);
+                            expect(user).to.have.property('updated_at').to.be.a('null').equal(null);
+                            expect(user).to.have.property('created_at');
+
+                            temp = user;
+                            data.active = 0;
+
+                            return result.models.users
+                                .update(data, temp.id, { transaction })
+                                .then(user => {
+                                    expect(user).to.have.property('active').to.be.a('number').equal(0);
+                                    expect(user).to.have.property('updated_at').to.be.a('date');
+                                    expect(user).to.have.property('created_at');
+
+                                    return result.models.users
+                                        .destroy(temp.id, { transaction })
+                                        .then(result => {
+                                            temp = null;
+                                            expect(result).to.be.a('number').equal(1);
+                                            return P.resolve(done());
+                                        });
+                                });
+                        });
+                });
+            })
+            .catch(done);
+    });
+
+    it('should raw query found', done => {
+        database = new Database(defaultOptions);
+        database
+            .discover()
+            .then(result => {
+                return result.models.users
+                    .query('SELECT * FROM users')
+                    .then(result => {
+                        expect(result).to.have.property('length').to.be.a('number');
+                        expect(result[0]).to.have.property('active').to.be.a('number').equal(1);
+                        expect(result[0]).to.have.property('updated_at').to.be.a('null').equal(null);
+                        expect(result[0]).to.have.property('created_at');
+                        return P.resolve(done());
+                    });
+            })
+            .catch(done);
+    });
 });

@@ -172,14 +172,14 @@ class Model {
     }
 
     store (query, options) {
-        return this.connection.query(query, options);
+        return this.sequelize.query(query, options);
     }
 
     query (query, options) {
         const opts = options || {};
 
         opts.type = opts.type || Sequelize.QueryTypes.SELECT;
-        return this.connection.query(query, opts);
+        return this.sequelize.query(query, opts);
     }
 
     queryOne (query, options) {
@@ -187,7 +187,7 @@ class Model {
     }
 
     transaction (callback) {
-        return this.connection.transaction(callback);
+        return this.sequelize.transaction(callback);
     }
 
     prepareReadOptions (options) {

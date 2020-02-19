@@ -45,8 +45,8 @@ describe('Database', () => {
 
         it('should return only one table of database on transaction mode', done => {
             db
-                .transaction(() => {
-                    return db.queryOne('SHOW TABLES').then(result => {
+                .transaction(transaction => {
+                    return db.queryOne('SHOW TABLES', { transaction }).then(result => {
                         expect(result).to.be.a('object').to.have.property(`Tables_in_${DBConfig.database}`);
 
                         done();
