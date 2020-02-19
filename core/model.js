@@ -8,7 +8,9 @@ const pluralize = require('pluralize');
 
 const omitOptions = ['attributes', 'where', 'order', 'group', 'limit', 'offset'];
 const defaultFieldId = 'id';
-const defaultWriteOptions = {};
+const defaultWriteOptions = {
+    useMaster: true
+};
 const defaultReadOptions = {
     raw: true,
     cache: true,
@@ -110,7 +112,14 @@ class Model {
     }
 
     create (data, options) {
-        return this.connection.create(data, this.prepareWriteOptions(options));
+        const opts = this.prepareWriteOptions(options);
+
+        return this.connection.create(data, opts).then(result => {
+            // Prevent unnecesary map results
+            if (opts.raw || !result || !result.id) return result;
+
+            return this.getById(result.id, opts);
+        });
     }
 
     update (data, id, field, options) {
