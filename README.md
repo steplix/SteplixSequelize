@@ -28,15 +28,19 @@ $ npm install
 
 ```js
 const { Database } = require('steplix-sequelize');
-// For more information of Database connections. See: https://www.npmjs.com/package/mysql#connection-options
+// For more information of Database connections. See: https://sequelize.org/master/class/lib/sequelize.js~Sequelize.html#instance-constructor-constructor
 const db = new Database({
   host: 'localhost',
   username: 'myuser',
   password: 'mypass',
   database: 'mydbname'
 });
+
+// Autodiscover models on database
+db.discover().then(() => {
+  return db.models.users.getById(1);
+})
 ```
-> If you need use pool connections, please set **usePool: true** on options. By default **connectionLimit** = **100**.
 
 #### Simple query Execution
 ```js
