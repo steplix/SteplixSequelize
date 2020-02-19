@@ -19,10 +19,10 @@
     "url": "https://github.com/steplix/SteplixSequelize/issues"
   },
   "keywords": [
-    "query",
-    "filter",
-    "params",
-    "parameters",
+    "sequelize",
+    "database",
+    "autodiscover",
+    "automate",
     "steplix"
   ],
   "dependencies": {
