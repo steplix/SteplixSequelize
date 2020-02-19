@@ -13,9 +13,7 @@ const sequelize = Sequelize; // eslint-disable-line no-unused-vars
 const defaultOptions = {
     discover: {
         mapping: {},
-        models: {
-            mapNameKey: _.identity
-        },
+        models: {},
         fields: {
             logicalDeleteFieldName: 'active'
         }
@@ -193,7 +191,7 @@ class Discoverer {
         const models = this.data.models;
         const classes = this.data.classes;
         const sequelize = this.sequelize = this.sequelize || new Sequelize(this.options.database);
-        const name = this.options.discover.models.mapNameKey(table.model);
+        const name = _.upperFirst(table.model);
 
         // Define getter and setter for model class. This allows to extend the functionality of the model.
         classes[name] = classes[name] || Model;

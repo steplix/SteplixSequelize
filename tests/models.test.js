@@ -27,9 +27,9 @@ describe('Real world', () => {
             .then(result => {
                 expect(result).to.have.property('tables');
                 expect(result).to.have.property('models');
-                expect(result.models.users).to.have.property('find');
+                expect(result.models.Users).to.have.property('find');
 
-                return result.models.users
+                return result.models.Users
                     .getOne()
                     .then(user => {
                         expect(user).to.have.property('created_at');
@@ -46,7 +46,7 @@ describe('Real world', () => {
         database
             .discover()
             .then(result => {
-                return result.models.users
+                return result.models.Users
                     .getById(1)
                     .then(user => {
                         expect(user).to.have.property('created_at');
@@ -67,7 +67,7 @@ describe('Real world', () => {
                     limit: 2
                 };
 
-                return result.models.users
+                return result.models.Users
                     .find(options)
                     .then(users => {
                         expect(users).to.have.property('length').to.be.a('number');
@@ -85,7 +85,7 @@ describe('Real world', () => {
         database
             .discover()
             .then(result => {
-                return result.models.users
+                return result.models.Users
                     .count()
                     .then(total => {
                         expect(total).to.be.a('number');
@@ -106,7 +106,7 @@ describe('Real world', () => {
                     }
                 };
 
-                return result.models.users
+                return result.models.Users
                     .exist(options)
                     .then(exist => {
                         expect(exist).to.be.a('boolean').equal(true);
@@ -125,7 +125,7 @@ describe('Real world', () => {
                     active: 1
                 };
 
-                return result.models.users
+                return result.models.Users
                     .create(data)
                     .then(user => {
                         expect(user).to.have.property('active').to.be.a('number').equal(1);
@@ -147,7 +147,7 @@ describe('Real world', () => {
                     active: 0
                 };
 
-                return result.models.users
+                return result.models.Users
                     .update(data, temp.id)
                     .then(user => {
                         expect(user).to.have.property('active').to.be.a('number').equal(0);
@@ -164,7 +164,7 @@ describe('Real world', () => {
         database
             .discover()
             .then(result => {
-                return result.models.users
+                return result.models.Users
                     .destroy(temp.id)
                     .then(result => {
                         temp = null;
@@ -184,8 +184,8 @@ describe('Real world', () => {
                     active: 1
                 };
 
-                return result.models.users.transaction(transaction => {
-                    return result.models.users
+                return result.models.Users.transaction(transaction => {
+                    return result.models.Users
                         .create(data, { transaction })
                         .then(user => {
                             expect(user).to.have.property('active').to.be.a('number').equal(1);
@@ -195,14 +195,14 @@ describe('Real world', () => {
                             temp = user;
                             data.active = 0;
 
-                            return result.models.users
+                            return result.models.Users
                                 .update(data, temp.id, { transaction })
                                 .then(user => {
                                     expect(user).to.have.property('active').to.be.a('number').equal(0);
                                     expect(user).to.have.property('updated_at').to.be.a('date');
                                     expect(user).to.have.property('created_at');
 
-                                    return result.models.users
+                                    return result.models.Users
                                         .destroy(temp.id, { transaction })
                                         .then(result => {
                                             temp = null;
@@ -221,7 +221,7 @@ describe('Real world', () => {
         database
             .discover()
             .then(result => {
-                return result.models.users
+                return result.models.Users
                     .query('SELECT * FROM users')
                     .then(result => {
                         expect(result).to.have.property('length').to.be.a('number');

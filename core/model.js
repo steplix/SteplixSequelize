@@ -264,7 +264,7 @@ class Model {
                 opts.without = options.without.concat(opts.without);
             }
 
-            const childModel = this.models[_.camelCase(child)];
+            const childModel = this.models[_.upperFirst(_.camelCase(child))];
 
             if (!childModel) {
                 return model;
@@ -308,7 +308,7 @@ class Model {
                 without: [entity]
             });
 
-            const childModel = this.models[child];
+            const childModel = this.models[_.upperFirst(child)];
 
             if (!childModel) {
                 return model;
