@@ -12,7 +12,9 @@ const sequelize = Sequelize; // eslint-disable-line no-unused-vars
 
 const defaultOptions = {
     mapping: {},
-    models: {},
+    models: {
+        mapName: _.identity
+    },
     fields: {
         logicalDeleteFieldName: 'active'
     }
@@ -60,7 +62,7 @@ class Discoverer {
                             // Save table on carry.
                             .then(table => {
                                 carry[table.name] = table;
-                                return carry;
+                                return table;
                             })
                             // Build model.
                             .then(table => this.buildModel(table))
@@ -189,26 +191,27 @@ class Discoverer {
         const models = this.data.models;
         const classes = this.data.classes;
         const sequelize = this.sequelize = this.sequelize || new Sequelize(this.options.database);
+        const name = this.options.models.mapName(table.model);
 
         // Define getter and setter for model class. This allows to extend the functionality of the model.
-        classes[table.model] = classes[table.model] || Model;
+        classes[name] = classes[name] || Model;
 
         // Define getter for model instance. This allows the instantiation of the model to be lazy.
-        Object.defineProperty(models, table.model, {
+        Object.defineProperty(models, name, {
             configurable: true,
             enumerable: true,
             get: function () {
-                let instance = modelInstances[table.model];
+                let instance = modelInstances[name];
 
                 if (!instance) {
                     table.sequelize = sequelize;
-                    instance = modelInstances[table.model] = new classes[table.model](table);
+                    instance = modelInstances[name] = new (classes[name])(table);
                     instance.models = models;
                 }
                 return instance;
             },
             set: function (classModel) {
-                classes[table.model] = classModel;
+                classes[name] = classModel;
             }
         });
 
