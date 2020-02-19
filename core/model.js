@@ -345,7 +345,7 @@ class Model {
 
         // Apply casting
         if (!_.isEmpty(this.options.cast) || !_.isEmpty(options.cast)) {
-            _.each((this.options.cast || []).concat(options.cast || []), (property, caster) => {
+            _.each(_.merge({}, this.options.case || {}, options.case || {}), (property, caster) => {
                 const value = caster(_.get(model, property), property, model);
 
                 if (!_.isNil(value)) {
@@ -355,7 +355,7 @@ class Model {
         }
         // Apply rename
         if (!_.isEmpty(this.options.rename) || !_.isEmpty(options.rename)) {
-            _.each((this.options.rename || []).concat(options.rename || []), (as, property) => {
+            _.each(_.merge({}, this.options.rename || {}, options.rename || {}), (as, property) => {
                 const value = _.get(model, property);
 
                 if (!_.isNil(value)) {
