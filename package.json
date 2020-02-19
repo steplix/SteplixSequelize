@@ -1,0 +1,47 @@
+{
+  "name": "steplix-sequelize",
+  "version": "0.0.1",
+  "description": "Steplix Sequelize is an adapter promise-based Node.js ORM autodiscover.",
+  "main": "index.js",
+  "scripts": {
+    "lint": "node_modules/.bin/eslint core tests",
+    "lint-fix": "node_modules/.bin/eslint --fix core tests",
+    "test": "NODE_ENV=testing mocha --file './tests/setup.js' --reporter spec --recursive tests/**/*.test.js"
+  },
+  "homepage": "https://github.com/steplix/SteplixSequelize#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/steplix/SteplixSequelize.git"
+  },
+  "author": "Steplix Developers",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/steplix/SteplixSequelize/issues"
+  },
+  "keywords": [
+    "query",
+    "filter",
+    "params",
+    "parameters",
+    "steplix"
+  ],
+  "dependencies": {
+    "async": "^3.1.1",
+    "bluebird": "^3.7.2",
+    "lodash": "^4.17.15",
+    "mysql2": "^2.1.0",
+    "pluralize": "^8.0.0",
+    "sequelize": "^5.21.5",
+    "sequelize-automate": "^1.2.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "eslint": "^6.6.0",
+    "eslint-config-standard": "^14.1.0",
+    "eslint-plugin-import": "^2.18.2",
+    "eslint-plugin-node": "^10.0.0",
+    "eslint-plugin-promise": "^4.2.1",
+    "eslint-plugin-standard": "^4.0.1",
+    "mocha": "^6.2.2"
+  }
+}
