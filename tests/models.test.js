@@ -180,7 +180,7 @@ describe('Real world', () => {
         database
             .discover()
             .then(result => {
-                let data = {
+                const data = {
                     active: 1
                 };
 

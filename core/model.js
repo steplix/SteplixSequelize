@@ -6,6 +6,7 @@ const async = require('async');
 const Sequelize = require('sequelize');
 const pluralize = require('pluralize');
 
+const pickOptions = ['without', 'transaction'];
 const omitOptions = ['attributes', 'where', 'order', 'group', 'limit', 'offset'];
 const defaultFieldId = 'id';
 const defaultWriteOptions = {
@@ -263,20 +264,18 @@ class Model {
                 return model;
             }
 
-            const relationships = options.relationships || {};
-            const opts = _.merge({}, relationships[property] || {}, {
-                without: [entity]
-            });
-
-            if (options.without) {
-                opts.without = options.without.concat(opts.without);
-            }
-
             const childModel = this.models[_.upperFirst(_.camelCase(child))];
 
             if (!childModel) {
                 return model;
             }
+
+            const relationships = options.relationships || {};
+            const opts = _.merge({}, relationships[property] || {}, _.pick(options, pickOptions));
+
+            opts.without = opts.without || [];
+            opts.without.push(entity);
+
             return childModel.getById(id, opts).then(result => {
                 if (result) {
                     model[property.replace(`${entity}_`, '')] = result;
@@ -307,20 +306,22 @@ class Model {
                 return model;
             }
 
-            const relationships = options.relationships || {};
-            const idField = `id_${entity}`;
-            const opts = _.merge({}, relationships[property] || {}, {
-                where: {
-                    [idField]: model.id
-                },
-                without: [entity]
-            });
-
             const childModel = this.models[_.upperFirst(child)];
 
             if (!childModel) {
                 return model;
             }
+
+            const relationships = options.relationships || {};
+            const idField = `id_${entity}`;
+            const opts = _.merge({}, relationships[property] || {}, _.pick(options, pickOptions));
+
+            opts.where = opts.where || {};
+            opts.where[idField] = model.id;
+
+            opts.without = opts.without || [];
+            opts.without.push(entity);
+
             return childModel.find(opts).then(results => {
                 if (results) {
                     model[property] = _.map(results, result => {
