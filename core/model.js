@@ -260,7 +260,6 @@ class Model {
             const id = model[idField];
 
             if (!id || (options.without && (options.without.includes(entity) || options.without.includes(property)))) {
-                delete model[idField];
                 return model;
             }
 
