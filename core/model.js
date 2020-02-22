@@ -257,10 +257,11 @@ class Model {
         return P.each(this.options.relationships.one, child => {
             // Build property name. Ex. child = 'device_brands' singularized = 'device_brand'
             const property = pluralize.singular(child);
+            const propertySimplify = property.replace(`${entity}_`, '');
             const idField = `id_${property}`;
             const id = model[idField];
 
-            if (!id || (options.without && (options.without.includes(entity) || options.without.includes(property)))) {
+            if (!id || (options.without && (options.without.includes(entity) || options.without.includes(property) || options.without.includes(propertySimplify)))) {
                 return model;
             }
 
@@ -271,14 +272,14 @@ class Model {
             }
 
             const relationships = options.relationships || {};
-            const opts = _.merge({}, relationships[property] || {}, _.pick(options, pickOptions));
+            const opts = _.merge({}, relationships[property] || relationships[propertySimplify] || {}, _.pick(options, pickOptions));
 
             opts.without = opts.without || [];
             opts.without.push(entity);
 
             return childModel.getById(id, opts).then(result => {
                 if (result) {
-                    model[property.replace(`${entity}_`, '')] = result;
+                    model[propertySimplify] = result;
                     delete model[idField];
                 }
                 return model;
