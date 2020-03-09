@@ -227,9 +227,9 @@ class Model {
 
         return new P((resolve, reject) => {
             async.map(models, (model, next) => {
-                return this.getById.apply(this, [model[field]].concat(args).concat([options])).then(model => {
-                    return P.resolve(next(null, model));
-                });
+                return this.getById.apply(this, [model[field]].concat(args).concat([options]))
+                    .then(model => P.resolve(next(null, model)))
+                    .catch(next);
             }, (error, models) => {
                 if (error) return reject(error);
                 return resolve(models);
