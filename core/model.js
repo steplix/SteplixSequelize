@@ -272,10 +272,30 @@ class Model {
             }
 
             const relationships = options.relationships || {};
-            const opts = _.merge({}, relationships[property] || relationships[propertySimplify] || {}, _.pick(options, pickOptions));
+            const relationship = relationships[property] || relationships[propertySimplify] || {};
+            const opts = _.merge({}, relationship, _.pick(options, pickOptions));
 
             opts.without = opts.without || [];
             opts.without.push(entity);
+
+            if (relationship) {
+                // "Without" does not remove relationship properties
+                if (relationship.without && relationship.without) {
+                    opts.without = _.uniq(opts.without.concat(relationship.without));
+                }
+                // "Hidden" remove relationship properties
+                if (relationship.hidden && relationship.hidden) {
+                    opts.hidden = _.uniq(opts.hidden.concat(relationship.hidden));
+                }
+                // "Rename" rename relationship properties
+                if (relationship.rename && relationship.rename) {
+                    opts.rename = _.merge(opts.rename, relationship.rename);
+                }
+                // "Cast" cast relationship properties
+                if (relationship.cast && relationship.cast) {
+                    opts.cast = _.merge(opts.cast, relationship.cast);
+                }
+            }
 
             return childModel.getById(id, opts).then(result => {
                 if (result) {
@@ -313,15 +333,34 @@ class Model {
                 return model;
             }
 
-            const relationships = options.relationships || {};
+            const relationship = (options.relationships || {})[property] || {};
             const idField = `id_${entity}`;
-            const opts = _.merge({}, relationships[property] || {}, _.pick(options, pickOptions));
+            const opts = _.merge({}, relationship, _.pick(options, pickOptions));
 
             opts.where = opts.where || {};
             opts.where[idField] = model.id;
 
             opts.without = opts.without || [];
             opts.without.push(entity);
+
+            if (relationship) {
+                // "Without" does not remove relationship properties
+                if (relationship.without && relationship.without) {
+                    opts.without = _.uniq(opts.without.concat(relationship.without));
+                }
+                // "Hidden" remove relationship properties
+                if (relationship.hidden && relationship.hidden) {
+                    opts.hidden = _.uniq(opts.hidden.concat(relationship.hidden));
+                }
+                // "Rename" rename relationship properties
+                if (relationship.rename && relationship.rename) {
+                    opts.rename = _.merge(opts.rename, relationship.rename);
+                }
+                // "Cast" cast relationship properties
+                if (relationship.cast && relationship.cast) {
+                    opts.cast = _.merge(opts.cast, relationship.cast);
+                }
+            }
 
             return childModel.find(opts).then(results => {
                 if (results) {
@@ -346,7 +385,7 @@ class Model {
 
         // Apply casting
         if (!_.isEmpty(this.options.cast) || !_.isEmpty(options.cast)) {
-            _.each(_.merge({}, this.options.case || {}, options.case || {}), (property, caster) => {
+            _.each(_.merge({}, this.options.cast || {}, options.cast || {}), (property, caster) => {
                 const value = caster(_.get(model, property), property, model);
 
                 if (!_.isNil(value)) {
