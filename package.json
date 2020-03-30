@@ -1,6 +1,6 @@
 {
   "name": "steplix-sequelize",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Steplix Sequelize is an adapter promise-based Node.js ORM autodiscover.",
   "main": "index.js",
   "scripts": {
