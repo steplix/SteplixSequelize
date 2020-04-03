@@ -194,7 +194,7 @@ class Discoverer {
         const name = _.upperFirst(table.model);
 
         // Define getter and setter for model class. This allows to extend the functionality of the model.
-        classes[name] = classes[name] || Model;
+        classes[name] = classes[name] || this.options.Model || this.options.database.Model || Model;
 
         // Define getter for model instance. This allows the instantiation of the model to be lazy.
         Object.defineProperty(models, name, {

@@ -67,15 +67,17 @@ class Model {
     find (options) {
         const opts = this.prepareReadOptions(options);
 
-        opts.attributes = opts.attributes || [defaultFieldId];
+        if (!opts.attributes) {
+            opts.attributes = ['*'];
+        }
 
         // Select models
         return this.connection.findAll(opts).then(models => {
             // Prevent unnecesary map models
-            if (opts.unfilled || !models || !models.length) return models;
+            if (!opts.populate || opts.unfilled || !models || !models.length) return models;
 
             // Map all finded models
-            return this.mapping(models, defaultFieldId, _.omit(opts, omitOptions));
+            return this.mappingAll(models, _.omit(opts, omitOptions));
         });
     }
 
@@ -108,7 +110,7 @@ class Model {
             }
 
             // If no unfilled model, populate necesary data
-            return this.populate(model, _.omit(opts, omitOptions));
+            return this.mappingOne(model, _.omit(opts, omitOptions));
         });
     }
 
@@ -201,11 +203,11 @@ class Model {
     }
 
     prepareReadOptions (options) {
-        return _.defaults({}, options || {}, defaultReadOptions);
+        return _.defaults({}, options || {}, this.options.readOptions || {}, defaultReadOptions);
     }
 
     prepareWriteOptions (options) {
-        return _.defaults({}, options || {}, defaultWriteOptions);
+        return _.defaults({}, options || {}, this.options.writeOptions || {}, defaultWriteOptions);
     }
 
     literal (value) {
@@ -237,6 +239,30 @@ class Model {
         });
     }
 
+    mappingAll (models, options) {
+        if (_.isEmpty(models)) {
+            return models;
+        }
+
+        return new P((resolve, reject) => {
+            async.map(models, (model, next) => {
+                return this.mappingOne(model, options)
+                    .then(model => P.resolve(next(null, model)))
+                    .catch(next);
+            }, (error, models) => {
+                if (error) return reject(error);
+                return resolve(models);
+            });
+        });
+    }
+
+    mappingOne (model, options) {
+        if (!model) {
+            return P.resolve(model);
+        }
+        return this.populate(model, options);
+    }
+
     populate (model, options) {
         return P.bind(this)
             .then(() => this.populateOne(model, options))
@@ -248,7 +274,7 @@ class Model {
         options = options || {};
 
         // Check if only need model (tiny) or not has one to one relationships
-        if (options.tiny || _.isEmpty(this.options.relationships.one)) {
+        if ((options.tiny && !options.with) || _.isEmpty(this.options.relationships.one)) {
             return P.resolve(model);
         }
 
@@ -261,43 +287,40 @@ class Model {
             const idField = `id_${property}`;
             const id = model[idField];
 
-            if (!id || (options.without && (options.without.includes(entity) || options.without.includes(property) || options.without.includes(propertySimplify)))) {
+            // Check if exists id relationship.
+            if (!id) {
                 return model;
             }
 
+            // Check if not need load relationship.
+            if (options.without && (options.without.includes(entity) || options.without.includes(property) || options.without.includes(propertySimplify))) {
+                return model;
+            }
+
+            // Check if need load relationship.
+            if (options.tiny && options.with && !(this.hasProperty(options.with, entity) || this.hasProperty(options.with, property) || this.hasProperty(options.with, propertySimplify))) {
+                return model;
+            }
+
+            // Check if model child exist.
             const childModel = this.models[_.upperFirst(_.camelCase(child))];
 
             if (!childModel) {
                 return model;
             }
 
+            // Check relationship options
             const relationships = options.relationships || {};
             const relationship = relationships[property] || relationships[propertySimplify] || {};
-            const opts = _.merge({}, relationship, _.pick(options, pickOptions));
+            let opts = _.merge({}, relationship, _.pick(options, pickOptions));
 
             opts.without = opts.without || [];
             opts.without.push(entity);
 
-            if (relationship) {
-                // "Without" does not remove relationship properties
-                if (relationship.without && relationship.without) {
-                    opts.without = _.uniq(opts.without.concat(relationship.without));
-                }
-                // "Hidden" remove relationship properties
-                if (relationship.hidden && relationship.hidden) {
-                    opts.hidden = _.uniq(opts.hidden.concat(relationship.hidden));
-                }
-                // "Rename" rename relationship properties
-                if (relationship.rename && relationship.rename) {
-                    opts.rename = _.merge(opts.rename, relationship.rename);
-                }
-                // "Cast" cast relationship properties
-                if (relationship.cast && relationship.cast) {
-                    opts.cast = _.merge(opts.cast, relationship.cast);
-                }
-            }
+            opts = this.prepareRelationshipOptions(opts, relationship);
 
             return childModel.getById(id, opts).then(result => {
+                // Check relationship result.
                 if (result) {
                     model[propertySimplify] = result;
                     delete model[idField];
@@ -312,7 +335,7 @@ class Model {
         options = options || {};
 
         // Check if only need model (tiny) or not has one to many/many to one relationships.
-        if (options.tiny || _.isEmpty(this.options.relationships.many)) {
+        if ((options.tiny && !options.with) || _.isEmpty(this.options.relationships.many)) {
             return P.resolve(model);
         }
 
@@ -321,21 +344,30 @@ class Model {
         return P.each(this.options.relationships.many, child => {
             child = _.camelCase(child);
 
+            // Build property name. Ex. child = 'device_brands' singularized = 'device_brand'
             const property = _.camelCase(child.replace(entity, ''));
 
-            if (options.without && options.without.includes(property)) {
+            // Check if not need load relationship.
+            if (options.without && (options.without.includes(entity) || options.without.includes(property))) {
                 return model;
             }
 
+            // Check if need load relationship.
+            if (options.tiny && options.with && !(this.hasProperty(options.with, entity) || this.hasProperty(options.with, property))) {
+                return model;
+            }
+
+            // Check if model child exist.
             const childModel = this.models[_.upperFirst(child)];
 
             if (!childModel) {
                 return model;
             }
 
+            // Check relationship options
             const relationship = (options.relationships || {})[property] || {};
             const idField = `id_${entity}`;
-            const opts = _.merge({}, relationship, _.pick(options, pickOptions));
+            let opts = _.merge({}, relationship, _.pick(options, pickOptions));
 
             opts.where = opts.where || {};
             opts.where[idField] = model.id;
@@ -343,26 +375,10 @@ class Model {
             opts.without = opts.without || [];
             opts.without.push(entity);
 
-            if (relationship) {
-                // "Without" does not remove relationship properties
-                if (relationship.without && relationship.without) {
-                    opts.without = _.uniq(opts.without.concat(relationship.without));
-                }
-                // "Hidden" remove relationship properties
-                if (relationship.hidden && relationship.hidden) {
-                    opts.hidden = _.uniq(opts.hidden.concat(relationship.hidden));
-                }
-                // "Rename" rename relationship properties
-                if (relationship.rename && relationship.rename) {
-                    opts.rename = _.merge(opts.rename, relationship.rename);
-                }
-                // "Cast" cast relationship properties
-                if (relationship.cast && relationship.cast) {
-                    opts.cast = _.merge(opts.cast, relationship.cast);
-                }
-            }
+            opts = this.prepareRelationshipOptions(opts, relationship);
 
             return childModel.find(opts).then(results => {
+                // Check relationship results.
                 if (results) {
                     model[property] = _.map(results, result => {
                         delete result[idField];
@@ -411,6 +427,39 @@ class Model {
             });
         }
         return model;
+    }
+
+    hasProperty (properties, property) {
+        return !!_.find(properties, prop => {
+            if (prop.includes('.')) {
+                return _.startsWith(prop, property);
+            }
+            return prop === property;
+        });
+    }
+
+    prepareRelationshipOptions (options, relationship) {
+        if (!relationship) {
+            return options;
+        }
+
+        // "Without" does not remove relationship properties
+        if (relationship.without && relationship.without) {
+            options.without = _.uniq((options.without || []).concat(relationship.without));
+        }
+        // "Hidden" remove relationship properties
+        if (relationship.hidden && relationship.hidden) {
+            options.hidden = _.uniq((options.hidden || []).concat(relationship.hidden));
+        }
+        // "Rename" rename relationship properties
+        if (relationship.rename && relationship.rename) {
+            options.rename = _.merge({}, (options.rename || {}), relationship.rename);
+        }
+        // "Cast" cast relationship properties
+        if (relationship.cast && relationship.cast) {
+            options.cast = _.merge({}, (options.cast || {}), relationship.cast);
+        }
+        return options;
     }
 }
 

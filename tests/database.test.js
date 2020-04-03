@@ -5,7 +5,7 @@ const { Database } = require('../core/steplix');
 const DBConfig = {
     host: 'localhost',
     username: 'root',
-    password: 'WwFFTRDJ7s2RgPWx',
+    password: '',
     database: 'steplix'
 };
 

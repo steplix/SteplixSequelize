@@ -1,12 +1,12 @@
 'use strict';
 
 const P = require('bluebird');
-const { Database } = require('../core/steplix');
+const { Database, Model } = require('../core/steplix');
 
 const defaultOptions = {
     database: 'steplix',
     username: 'root',
-    password: 'WwFFTRDJ7s2RgPWx',
+    password: '',
     host: 'localhost'
 };
 
@@ -228,6 +228,30 @@ describe('Real world', () => {
                         expect(result[0]).to.have.property('active').to.be.a('number').equal(1);
                         expect(result[0]).to.have.property('updated_at').to.be.a('null').equal(null);
                         expect(result[0]).to.have.property('created_at');
+                        return P.resolve(done());
+                    });
+            })
+            .catch(done);
+    });
+
+    it('should return model only with selected relationships', done => {
+        database = new Database(defaultOptions);
+        database
+            .discover()
+            .then(result => {
+                expect(result).to.have.property('tables');
+                expect(result).to.have.property('models');
+                expect(result.models.Users).to.have.property('find');
+
+                return result.models.Users
+                    .getOne({
+                        tiny: true,
+                        with: ['permissions']
+                    })
+                    .then(user => {
+                        expect(user).to.have.property('created_at');
+                        expect(user).to.not.have.property('attributes');
+                        expect(user).to.have.property('permissions');
                         return P.resolve(done());
                     });
             })
