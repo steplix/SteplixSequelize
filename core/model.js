@@ -293,12 +293,12 @@ class Model {
             }
 
             // Check if not need load relationship.
-            if (options.without && (options.without.includes(entity) || options.without.includes(property) || options.without.includes(propertySimplify))) {
+            if (options.without && (options.without.includes(property) || options.without.includes(propertySimplify))) {
                 return model;
             }
 
             // Check if need load relationship.
-            if (options.tiny && options.with && !(this.hasProperty(options.with, entity) || this.hasProperty(options.with, property) || this.hasProperty(options.with, propertySimplify))) {
+            if (options.tiny && options.with && !(this.hasProperty(options.with, property) || this.hasProperty(options.with, propertySimplify))) {
                 return model;
             }
 
@@ -348,12 +348,12 @@ class Model {
             const property = _.camelCase(child.replace(entity, ''));
 
             // Check if not need load relationship.
-            if (options.without && (options.without.includes(entity) || options.without.includes(property))) {
+            if (options.without && options.without.includes(property)) {
                 return model;
             }
 
             // Check if need load relationship.
-            if (options.tiny && options.with && !(this.hasProperty(options.with, entity) || this.hasProperty(options.with, property))) {
+            if (options.tiny && options.with && !this.hasProperty(options.with, property)) {
                 return model;
             }
 
