@@ -14,6 +14,7 @@ const defaultWriteOptions = {
 };
 const defaultReadOptions = {
     raw: true,
+    tiny: true,
     cache: true,
     populate: true,
     transform: true
