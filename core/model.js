@@ -188,14 +188,23 @@ class Model {
         return this.sequelize.query(query, options);
     }
 
-    query (query, options) {
-        const opts = options || {};
+    query (query, options = {}) {
+        const type = options.type || Sequelize.QueryTypes.SELECT;
+        const opts = (type === Sequelize.QueryTypes.SELECT) ? this.prepareReadOptions(options) : options;
 
         opts.type = opts.type || Sequelize.QueryTypes.SELECT;
-        return this.sequelize.query(query, opts);
+
+        return this.sequelize.query(query, opts).then(models => {
+            // Prevent unnecesary map models
+            if (!opts.populate || opts.unfilled || !models || !models.length) return models;
+
+            // Map all finded models
+            return this.mappingAll(models, _.omit(opts, omitOptions));
+        });
     }
 
-    queryOne (query, options) {
+    queryOne (query, options = {}) {
+        options.limit = 1;
         return this.query(query, options).then(results => _.first(results || []));
     }
 

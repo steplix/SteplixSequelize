@@ -39,8 +39,9 @@ class Database {
         return this.connection.query(query, options);
     }
 
-    queryOne (query, options) {
-        return this.query(query).then(results => {
+    queryOne (query, options = {}) {
+        options.limit = 1;
+        return this.query(query, options).then(results => {
             let result;
 
             if (results && results.length) {

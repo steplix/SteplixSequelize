@@ -1,7 +1,7 @@
 'use strict';
 
 const P = require('bluebird');
-const { Database, Model } = require('../core/steplix');
+const { Database } = require('../core/steplix');
 
 const defaultOptions = {
     database: 'steplix',
