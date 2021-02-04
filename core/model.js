@@ -307,6 +307,14 @@ class Model {
                 return model;
             }
 
+            // Check if not need load relationship.
+            if (options.hidden && (options.hidden.includes(property) || options.hidden.includes(propertySimplify))) {
+                delete model[idField];
+                delete model[property];
+                delete model[propertySimplify];
+                return model;
+            }
+
             // Check if need load relationship.
             if (options.tiny && options.with && !(this.hasProperty(options.with, property) || this.hasProperty(options.with, propertySimplify))) {
                 return model;
@@ -359,6 +367,12 @@ class Model {
 
             // Check if not need load relationship.
             if (options.without && options.without.includes(property)) {
+                return model;
+            }
+
+            // Check if not need load relationship.
+            if (options.hidden && options.hidden.includes(property)) {
+                delete model[property];
                 return model;
             }
 
@@ -468,6 +482,10 @@ class Model {
         // "Cast" cast relationship properties
         if (relationship.cast && relationship.cast) {
             options.cast = _.merge({}, (options.cast || {}), relationship.cast);
+        }
+        // "tiny" relationship properties
+        if (relationship.tiny) {
+            options.tiny = relationship.tiny;
         }
         return options;
     }

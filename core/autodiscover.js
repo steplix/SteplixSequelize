@@ -95,7 +95,13 @@ class Discoverer {
         table.attributes = _.mapValues(definition.attributes, attribute => {
             // TODO Optimize this step.
             attribute.type = eval(attribute.type); // eslint-disable-line no-eval
-            attribute.defaultValue = eval(attribute.defaultValue); // eslint-disable-line no-eval
+
+            try {
+                attribute.defaultValue = eval(attribute.defaultValue); // eslint-disable-line no-eval
+            } catch (e) {
+                // On eval error, use raw default value
+                attribute.defaultValue = attribute.defaultValue;
+            }
             return attribute;
         });
 
