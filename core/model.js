@@ -6,7 +6,7 @@ const async = require('async');
 const Sequelize = require('sequelize');
 const pluralize = require('pluralize');
 
-const pickOptions = ['without', 'transaction'];
+const pickOptions = ['with', 'without', 'transaction'];
 const omitOptions = ['attributes', 'where', 'order', 'group', 'limit', 'offset'];
 const defaultFieldId = 'id';
 const defaultWriteOptions = {
@@ -330,12 +330,13 @@ class Model {
             // Check relationship options
             const relationships = options.relationships || {};
             const relationship = relationships[property] || relationships[propertySimplify] || {};
+            const realProperty = relationships[property] ? property : (relationships[propertySimplify] ? propertySimplify : property);
             let opts = _.merge({}, relationship, _.pick(options, pickOptions));
 
             opts.without = opts.without || [];
             opts.without.push(entity);
 
-            opts = this.prepareRelationshipOptions(opts, relationship);
+            opts = this.prepareRelationshipOptions(opts, relationship, realProperty);
 
             return childModel.getById(id, opts).then(result => {
                 // Check relationship result.
@@ -399,7 +400,7 @@ class Model {
             opts.without = opts.without || [];
             opts.without.push(entity);
 
-            opts = this.prepareRelationshipOptions(opts, relationship);
+            opts = this.prepareRelationshipOptions(opts, relationship, property);
 
             return childModel.find(opts).then(results => {
                 // Check relationship results.
@@ -462,30 +463,59 @@ class Model {
         });
     }
 
-    prepareRelationshipOptions (options, relationship) {
-        if (!relationship) {
-            return options;
-        }
+    prepareRelationshipOptions (options, relationship, key) {
+        options = options || {};
 
-        // "Without" does not remove relationship properties
-        if (relationship.without && relationship.without) {
-            options.without = _.uniq((options.without || []).concat(relationship.without));
+        if (!_.isEmpty(relationship)) {
+            // "With" include relationship properties
+            if (relationship.with) {
+                options.with = _.uniq((options.with || []).concat(relationship.with));
+            }
+            // "Without" does not remove relationship properties
+            if (relationship.without) {
+                options.without = _.uniq((options.without || []).concat(relationship.without));
+            }
+            // "Hidden" remove relationship properties
+            if (relationship.hidden) {
+                options.hidden = _.uniq((options.hidden || []).concat(relationship.hidden));
+            }
+            // "Rename" include relationship properties
+            if (relationship.rename) {
+                options.rename = _.merge({}, (options.rename || {}), relationship.rename);
+            }
+            // "Cast" include relationship properties
+            if (relationship.cast) {
+                options.cast = _.merge({}, (options.cast || {}), relationship.cast);
+            }
+            // "Tiny" relationship properties
+            if (relationship.tiny) {
+                options.tiny = true;
+            }
         }
-        // "Hidden" remove relationship properties
-        if (relationship.hidden && relationship.hidden) {
-            options.hidden = _.uniq((options.hidden || []).concat(relationship.hidden));
-        }
-        // "Rename" rename relationship properties
-        if (relationship.rename && relationship.rename) {
-            options.rename = _.merge({}, (options.rename || {}), relationship.rename);
-        }
-        // "Cast" cast relationship properties
-        if (relationship.cast && relationship.cast) {
-            options.cast = _.merge({}, (options.cast || {}), relationship.cast);
-        }
-        // "tiny" relationship properties
-        if (relationship.tiny) {
-            options.tiny = relationship.tiny;
+        else {
+            const modelOptionRegExp = new RegExp(`${key}\.`, 'i');
+            const getRelationshipOptions = (options) => {
+                const replaced = _.map(options, (element) => {
+                    if (modelOptionRegExp.test(element)) { return element.replace(modelOptionRegExp, ''); }
+                });
+                return _.compact(replaced);
+            };
+
+            // "With" included in options.with='account.*'
+            if (options.with) {
+                const withOpts = getRelationshipOptions(options.with);
+                if (withOpts.length) options.with = withOpts;
+            }
+            // "Without" included in options.without='account.*'
+            if (options.without) {
+                const withoutOpts = getRelationshipOptions(options.without);
+                if (withoutOpts.length) options.without = withoutOpts;
+            }
+            // "Hidden" included in options.hidden='account.*'
+            if (options.hidden) {
+                const hiddenOpts = getRelationshipOptions(options.hidden);
+                if (hiddenOpts.length) options.hidden = hiddenOpts;
+            }
         }
         return options;
     }
