@@ -2,6 +2,7 @@
 
 const _ = require('lodash');
 const P = require('bluebird');
+const fs = require('fs');
 const async = require('async');
 const pluralize = require('pluralize');
 const Sequelize = require('sequelize');
@@ -9,6 +10,10 @@ const SequelizeAutomate = require('sequelize-automate');
 const Model = require('./model');
 const DataTypes = Sequelize.DataTypes; // eslint-disable-line no-unused-vars
 const sequelize = Sequelize; // eslint-disable-line no-unused-vars
+
+const persistEnabled = ['1', 'true'].includes(String(process.env.STEPLIX_SEQUELIZE_PERSISTS_ENABLED).toLowerCase());
+const persistPretty = ['1', 'true'].includes(String(process.env.STEPLIX_SEQUELIZE_PERSISTS_PRETTY).toLowerCase());
+const persistPath = process.env.STEPLIX_SEQUELIZE_PERSISTS_PATH || '.models';
 
 const defaultOptions = {
     discover: {
@@ -31,6 +36,16 @@ class Discoverer {
         }
         if (!this.options.discover) {
             throw new Error('Database discoverer need options.discover for find definitions of each tables.');
+        }
+
+        this.persistEnabled = persistEnabled;
+        this.persistPretty = persistPretty;
+        this.persistPath = persistPath;
+
+        if (this.options.discover.persist) {
+            this.persistEnabled = this.options.discover.persist.enabled /* nil comparation */ != null ? this.options.discover.persist.enabled : this.persistEnabled;
+            this.persistPretty = this.options.discover.persist.pretty /* nil comparation */ != null ? this.options.discover.persist.pretty : this.persistPretty;
+            this.persistPath = this.options.discover.persist.persistPath || this.persistPath;
         }
 
         this.data = {
@@ -65,7 +80,11 @@ class Discoverer {
                                 return table;
                             })
                             // Build model.
-                            .then(table => this.buildModel(table))
+                            .then(table => {
+                                return P.bind(this)
+                                    .then(() => this.buildModel(table))
+                                    .then(() => this.persistModel(table));
+                            })
                             .then(() => P.resolve(next(null, carry)))
                             .catch(next);
                     }, (error, tables) => {
@@ -222,6 +241,43 @@ class Discoverer {
         });
 
         return P.resolve(models);
+    }
+
+    persistModel (table) {
+        if (!this.persistEnabled) {
+            return P.resolve(this.data.models);
+        }
+
+        const recursive = true;
+
+        return P.bind(this)
+            .then(() => {
+                return new P((resolve, reject) => {
+                    fs.access(this.persistPath, (error, exists) => {
+                        if (!error || exists) {
+                            return resolve();
+                        }
+
+                        return fs.mkdir(this.persistPath, { recursive }, error => {
+                            if (error) return reject(error);
+                            return resolve();
+                        });
+                    });
+                });
+            })
+            .then(() => {
+                return new P((resolve, reject) => {
+                    return fs.writeFile(
+                        `${this.persistPath}/${table.model}.json`,
+                        this.persistPretty ? JSON.stringify(table, null, 2) : JSON.stringify(table),
+                        error => {
+                            if (error) return reject(error);
+                            return resolve();
+                        }
+                    );
+                });
+            })
+            .return(this.data.models);
     }
 }
 
