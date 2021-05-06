@@ -6,7 +6,7 @@ const { Database } = require('../core/steplix');
 const defaultOptions = {
     database: 'steplix',
     username: 'root',
-    password: '',
+    password: 'WwFFTRDJ7s2RgPWx',
     host: 'localhost'
 };
 
@@ -30,7 +30,7 @@ describe('Real world', () => {
                 expect(result.models.Users).to.have.property('find');
 
                 return result.models.Users
-                    .getOne()
+                    .getOne({ tiny: false })
                     .then(user => {
                         expect(user).to.have.property('created_at');
                         expect(user).to.have.property('attributes');
@@ -47,7 +47,7 @@ describe('Real world', () => {
             .discover()
             .then(result => {
                 return result.models.Users
-                    .getById(1)
+                    .getById(1, { tiny: false })
                     .then(user => {
                         expect(user).to.have.property('created_at');
                         expect(user).to.have.property('attributes');
@@ -64,7 +64,8 @@ describe('Real world', () => {
             .discover()
             .then(result => {
                 const options = {
-                    limit: 2
+                    limit: 2,
+                    tiny: false
                 };
 
                 return result.models.Users
