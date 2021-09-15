@@ -114,7 +114,7 @@ class Query {
             conditions.push(`WHERE ${this.where(options.where)}`);
         }
         if (options.order) {
-            conditions.push(`ORDER BY ${_.reduce(options.order, (carry, field) => carry += _.isArray(field) ? field.join(' ') : field, '')}`);
+            conditions.push(`ORDER BY ${_.reduce(options.order, (carry, field) => carry += (carry === '' ? '' : ', ') + (_.isArray(field) ? field.join(' ') : field) , '')}`);
         }
         if (options.group) {
             conditions.push(`GROUP BY ${options.group.join(', ')}`);
