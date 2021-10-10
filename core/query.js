@@ -113,6 +113,9 @@ class Query {
         if (options.where) {
             conditions.push(`WHERE ${this.where(options.where)}`);
         }
+        if (options.collate) {
+            conditions.push(`COLLATE ${options.collate.join(', ')}`);
+        }
         if (options.order) {
             conditions.push(`ORDER BY ${_.reduce(options.order, (carry, field) => carry += _.isArray(field) ? field.join(' ') : field, '')}`);
         }
