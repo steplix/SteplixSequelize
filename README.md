@@ -5,26 +5,30 @@ Steplix Sequelize is an adapter promise-based Node.js ORM autodiscover.
 ## Index
 
 * [Download & Install][install].
-* [How is it used?][how_is_it_used].
+* [How is it used?][how_is_it_used]
+  + [Getting started][getting_started]
+  + [Configure][configure]
+  + [Detailed explanation][detailed_explanation]
 * [Tests][tests].
 
 ## Download & Install
 
 ### NPM
-```bash
-$ npm install steplix-sequelize
+```sh
+npm install steplix-sequelize
 ```
 
 ### Source code
-```bash
-$ git clone https://github.com/steplix/SteplixSequelize.git
-$ cd SteplixSequelize
-$ npm install
+```sh
+git clone https://github.com/steplix/SteplixSequelize.git
+cd SteplixSequelize
+npm install
 ```
 
 ## How is it used?
+> NOTE: Based on bluebird promises.
 
-### Create new **Database** instance.
+### Getting started
 
 ```js
 const { Database } = require('steplix-sequelize');
@@ -41,6 +45,20 @@ db.discover().then(() => {
   return db.models.users.getById(1);
 })
 ```
+
+
+### Configure
+
+#### For app/server.
+
+| Environment variable               | Values     | Type    | Default value | Description                                                                 |
+|:-----------------------------------|:-----------|:--------|:--------------|:----------------------------------------------------------------------------|
+| STEPLIX_SEQUELIZE_PERSISTS_ENABLED | true/false | boolean | `false`       | Indicate if persist discover on physical JSON files                         |
+| STEPLIX_SEQUELIZE_PERSISTS_PRETTY  | true/false | boolean | `false`       | Indicate if persist discover on physical JSON files with pretty JSON format |
+| STEPLIX_SEQUELIZE_PERSISTS_PATH    | dir name   | string  | .models       | Directory for JSON files                                                    |
+
+
+### Detailed explanation
 
 #### Simple query Execution
 ```js

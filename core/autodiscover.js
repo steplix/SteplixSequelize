@@ -1,5 +1,9 @@
 'use strict';
 
+//
+// imports
+//
+
 const _ = require('lodash');
 const P = require('bluebird');
 const fs = require('fs');
@@ -7,14 +11,29 @@ const async = require('async');
 const pluralize = require('pluralize');
 const Sequelize = require('sequelize');
 const SequelizeAutomate = require('sequelize-automate');
+const definition = require('sequelize-automate/src/util/definition');
+const debug = require('debug')('steplix:sequelize');
 const Model = require('./model');
+
+//
+// constants
+//
+
+// Declare for prevent bug on eval
 const DataTypes = Sequelize.DataTypes; // eslint-disable-line no-unused-vars
 const sequelize = Sequelize; // eslint-disable-line no-unused-vars
 
+// Regular expressions
+const regexpDataTypeLength = /\(\d+\)/;
+const regexpDataTypeBinary = /^binary/;
+const regexpDataTypeVarbinary = /^varbinary/;
+
+// Check if is necesary persist discover models
 const persistEnabled = ['1', 'true'].includes(String(process.env.STEPLIX_SEQUELIZE_PERSISTS_ENABLED).toLowerCase());
 const persistPretty = ['1', 'true'].includes(String(process.env.STEPLIX_SEQUELIZE_PERSISTS_PRETTY).toLowerCase());
 const persistPath = process.env.STEPLIX_SEQUELIZE_PERSISTS_PATH || '.models';
 
+// Default Options
 const defaultOptions = {
     discover: {
         mapping: {},
@@ -25,8 +44,12 @@ const defaultOptions = {
     }
 };
 
+// Model instances
 const modelInstances = {};
 
+//
+// class
+//
 class Discoverer {
     constructor (options) {
         this.options = _.defaultsDeep({}, options || {}, defaultOptions);
@@ -54,12 +77,22 @@ class Discoverer {
         };
     }
 
+    /**
+     * Discover models
+     * 
+     * @return discovered data
+     */
     run () {
         return P.bind(this)
             .then(this.discover)
             .return(this.data);
     }
 
+    /**
+     * Discover models
+     * 
+     * @return discovered tables
+     */
     discover () {
         this.automate = new SequelizeAutomate(this.options.database || this.options.db, this.options.discover);
 
@@ -98,6 +131,11 @@ class Discoverer {
             .return(this.data.tables);
     }
 
+    /**
+     * Prepare table definition data
+     * 
+     * @return table definition data
+     */
     prepareTable (definition, definitions) {
         const table = {};
 
@@ -111,17 +149,13 @@ class Discoverer {
         table.fields = _.keys(definition.attributes);
 
         // Table fields.
-        table.attributes = _.mapValues(definition.attributes, attribute => {
-            // TODO Optimize this step.
-            attribute.type = eval(attribute.type); // eslint-disable-line no-eval
+        table.attributes = _.mapValues(definition.attributes, field => {
+            // Field type
+            field.type = this.prepareColumnType(table, field, field.type);
 
-            try {
-                attribute.defaultValue = eval(attribute.defaultValue); // eslint-disable-line no-eval
-            } catch (e) {
-                // On eval error, use raw default value
-                attribute.defaultValue = attribute.defaultValue;
-            }
-            return attribute;
+            // Field default value
+            field.defaultValue = this.prepareColumnDefaultValue(table, field, field.defaultValue);
+            return field;
         });
 
         // Table indexes.
@@ -163,6 +197,68 @@ class Discoverer {
             .return(table);
     }
 
+    /**
+     * Try to resolve column type
+     * 
+     * @return column sequelize type
+     */
+    prepareColumnType (table, field, type) {
+        try {
+            return eval(type); // eslint-disable-line no-eval
+        }
+        catch (e) {
+            try {
+                return eval(definition.getDataType(field)); // eslint-disable-line no-eval
+            }
+            catch (e) {
+                try {
+                    //
+                    // Steplix :: Extend definition.getDataType
+                    //
+                    const length = type.match(/\(\d+\)/);
+                    const typeLength = !_.isNull(length) ? length : '';
+
+                    if (type.match(regexpDataTypeBinary) || type.match(regexpDataTypeVarbinary)) {
+                        return `DataTypes.STRING.BINARY${typeLength}`;
+                    }
+                }
+                catch (e) {
+                    // eslint-disable-next-line no-console
+                    console.warn(`Do you really need to use type [${type}]? varchar fixes everything... lol. Review table ${table.name} - column ${field.field}. steplix-sequelize not support this type`)
+                    throw e;
+                }
+            }
+        }
+    }
+
+    /**
+     * Try to resolve column default value
+     * 
+     * @return column sequelize type
+     */
+    prepareColumnDefaultValue (table, field, defaultValue) {
+        try {
+            return eval(defaultValue); // eslint-disable-line no-eval
+        } catch (e) {
+            try {
+                return definition.getDefaultValue(field, this.options.database.dialect || 'mysql');
+            } catch (e) {
+                // eslint-disable-next-line no-console
+                console.warn(`Do you really need to use default value [${defaultValue}]? Review table ${table.name} - column ${field.field}. steplix-sequelize can't parse this default value`)
+            }
+        }
+        // On eval error, use raw default value
+        return defaultValue;
+    }
+
+    /**
+     * Discover table relationships
+     * 
+     * TODO: Currently we discover the relationships based on the nomenclature of the tables.
+     *       The idea would be that they be discovered based on foreign keys.
+     * 
+     * @return table
+     */
     discoverRelationships (table, definitions) {
         const id = `id_${table.nomenclature.relationship}`;
 
@@ -212,6 +308,11 @@ class Discoverer {
             .return(table);
     }
 
+    /**
+     * Prepare the model within the instances found. But it only defines it as a property so that its initialization is lazy
+     * 
+     * @return discovered models
+     */
     buildModel (table) {
         const models = this.data.models;
         const classes = this.data.classes;
@@ -243,6 +344,9 @@ class Discoverer {
         return P.resolve(models);
     }
 
+    /**
+     * Persist model on physical JSON file. Only is STEPLIX_SEQUELIZE_PERSISTS_ENABLED=true
+     */
     persistModel (table) {
         if (!this.persistEnabled) {
             return P.resolve(this.data.models);
