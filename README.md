@@ -271,4 +271,7 @@ npm test
 <!-- deep links -->
 [install]: #download--install
 [how_is_it_used]: #how-is-it-used
+[getting_started]: #getting-started
+[configure]: #configure
+[detailed_explanation]: #detailed-explanation
 [tests]: #tests
