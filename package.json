@@ -1,6 +1,6 @@
 {
   "name": "steplix-sequelize",
-  "version": "0.0.24",
+  "version": "0.1.0",
   "description": "Steplix Sequelize is an adapter promise-based Node.js ORM autodiscover.",
   "main": "index.js",
   "scripts": {
@@ -26,22 +26,22 @@
     "steplix"
   ],
   "dependencies": {
-    "async": "^3.1.1",
+    "async": "^3.2.4",
     "bluebird": "^3.7.2",
-    "lodash": "^4.17.15",
-    "mysql2": "^2.1.0",
+    "lodash": "^4.17.21",
+    "mysql2": "^2.3.3",
     "pluralize": "^8.0.0",
-    "sequelize": "^5.21.5",
-    "sequelize-automate": "^1.2.0"
+    "sequelize": "^6.21.6",
+    "sequelize-automate": "^1.2.2"
   },
   "devDependencies": {
-    "chai": "^4.2.0",
-    "eslint": "^6.6.0",
-    "eslint-config-standard": "^14.1.0",
-    "eslint-plugin-import": "^2.18.2",
+    "chai": "^4.3.6",
+    "eslint": "^6.8.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-plugin-import": "^2.26.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1",
+    "eslint-plugin-promise": "^4.3.1",
+    "eslint-plugin-standard": "^4.1.0",
     "mocha": "^6.2.3"
   }
 }
