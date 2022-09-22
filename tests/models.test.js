@@ -5,9 +5,10 @@ const { Database } = require('../core/steplix');
 
 const defaultOptions = {
     database: 'steplix',
-    username: 'root',
-    password: 'WwFFTRDJ7s2RgPWx',
-    host: 'localhost'
+    username: 'test',
+    password: 'test',
+    host: 'localhost',
+    dialect: 'mysql'
 };
 
 let database;

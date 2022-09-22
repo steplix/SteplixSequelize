@@ -56,7 +56,7 @@ class Database {
     }
 
     isAlive () {
-        return this.connection.authenticate().return(true);
+        return this.connection.authenticate().then(() => true);
     }
 
     ping () {

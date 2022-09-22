@@ -1,6 +1,6 @@
 {
   "name": "steplix-sequelize",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Steplix Sequelize is an adapter promise-based Node.js ORM autodiscover.",
   "main": "index.js",
   "scripts": {
@@ -31,8 +31,8 @@
     "lodash": "^4.17.21",
     "mysql2": "^2.3.3",
     "pluralize": "^8.0.0",
-    "sequelize": "^6.21.6",
-    "sequelize-automate": "^1.2.2"
+    "sequelize": "^6.23.0",
+    "sequelize-automate": "git+https://github.com/alejandro-steplix/sequelize-automate.git"
   },
   "devDependencies": {
     "chai": "^4.3.6",

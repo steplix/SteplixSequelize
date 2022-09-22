@@ -12,7 +12,6 @@ const pluralize = require('pluralize');
 const Sequelize = require('sequelize');
 const SequelizeAutomate = require('sequelize-automate');
 const definition = require('sequelize-automate/src/util/definition');
-const debug = require('debug')('steplix:sequelize');
 const Model = require('./model');
 
 //
@@ -24,7 +23,6 @@ const DataTypes = Sequelize.DataTypes; // eslint-disable-line no-unused-vars
 const sequelize = Sequelize; // eslint-disable-line no-unused-vars
 
 // Regular expressions
-const regexpDataTypeLength = /\(\d+\)/;
 const regexpDataTypeBinary = /^binary/;
 const regexpDataTypeVarbinary = /^varbinary/;
 
@@ -41,7 +39,8 @@ const defaultOptions = {
         fields: {
             logicalDeleteFieldName: 'active'
         }
-    }
+    },
+    dialect: 'mysql'
 };
 
 // Model instances
@@ -79,7 +78,7 @@ class Discoverer {
 
     /**
      * Discover models
-     * 
+     *
      * @return discovered data
      */
     run () {
@@ -90,7 +89,7 @@ class Discoverer {
 
     /**
      * Discover models
-     * 
+     *
      * @return discovered tables
      */
     discover () {
@@ -133,7 +132,7 @@ class Discoverer {
 
     /**
      * Prepare table definition data
-     * 
+     *
      * @return table definition data
      */
     prepareTable (definition, definitions) {
@@ -199,7 +198,7 @@ class Discoverer {
 
     /**
      * Try to resolve column type
-     * 
+     *
      * @return column sequelize type
      */
     prepareColumnType (table, field, type) {
@@ -224,7 +223,7 @@ class Discoverer {
                 }
                 catch (e) {
                     // eslint-disable-next-line no-console
-                    console.warn(`Do you really need to use type [${type}]? varchar fixes everything... lol. Review table ${table.name} - column ${field.field}. steplix-sequelize not support this type`)
+                    console.warn(`Do you really need to use type [${type}]? varchar fixes everything... lol. Review table ${table.name} - column ${field.field}. steplix-sequelize not support this type`);
                     throw e;
                 }
             }
@@ -233,18 +232,20 @@ class Discoverer {
 
     /**
      * Try to resolve column default value
-     * 
+     *
      * @return column sequelize type
      */
     prepareColumnDefaultValue (table, field, defaultValue) {
         try {
             return eval(defaultValue); // eslint-disable-line no-eval
-        } catch (e) {
+        }
+        catch (e) {
             try {
                 return definition.getDefaultValue(field, this.options.database.dialect || 'mysql');
-            } catch (e) {
+            }
+            catch (e) {
                 // eslint-disable-next-line no-console
-                console.warn(`Do you really need to use default value [${defaultValue}]? Review table ${table.name} - column ${field.field}. steplix-sequelize can't parse this default value`)
+                console.warn(`Do you really need to use default value [${defaultValue}]? Review table ${table.name} - column ${field.field}. steplix-sequelize can't parse this default value`);
             }
         }
         // On eval error, use raw default value
@@ -253,10 +254,10 @@ class Discoverer {
 
     /**
      * Discover table relationships
-     * 
+     *
      * TODO: Currently we discover the relationships based on the nomenclature of the tables.
      *       The idea would be that they be discovered based on foreign keys.
-     * 
+     *
      * @return table
      */
     discoverRelationships (table, definitions) {
@@ -310,7 +311,7 @@ class Discoverer {
 
     /**
      * Prepare the model within the instances found. But it only defines it as a property so that its initialization is lazy
-     * 
+     *
      * @return discovered models
      */
     buildModel (table) {
