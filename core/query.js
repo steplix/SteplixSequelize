@@ -117,7 +117,7 @@ class Query {
             conditions.push(`COLLATE ${options.collate.join(', ')}`);
         }
         if (options.order) {
-            conditions.push(`ORDER BY ${_.reduce(options.order, (carry, field) => carry += _.isArray(field) ? field.join(' ') : field, '')}`);
+            conditions.push(`ORDER BY ${options.order.map(field => _.isArray(field) ? field.join(' ') : field).join(', ')}`);
         }
         if (options.group) {
             conditions.push(`GROUP BY ${options.group.join(', ')}`);
@@ -135,7 +135,7 @@ class Query {
         return _.reduce(_.keys(joins), (memo, key) => {
             const join = joins[key];
 
-            memo.push(`${join.type || 'INNER'} JOIN ${join.table}${join.alias ? ` ${join.alias}`: ''} ON ${this.where(join.on, undefined, undefined, undefined, '')}`);
+            memo.push(`${join.type || 'INNER'} JOIN ${join.table}${join.alias ? ` ${join.alias}` : ''} ON ${this.where(join.on, undefined, undefined, undefined, '')}`);
             return memo;
         }, [])
             .join(' ');

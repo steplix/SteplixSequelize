@@ -4,8 +4,8 @@
   "description": "Steplix Sequelize is an adapter promise-based Node.js ORM autodiscover.",
   "main": "index.js",
   "scripts": {
-    "lint": "node_modules/.bin/eslint core tests",
-    "lint-fix": "node_modules/.bin/eslint --fix core tests",
+    "lint": "eslint core tests",
+    "lint-fix": "eslint --fix core tests",
     "test": "NODE_ENV=testing mocha --file './tests/setup.js' --reporter spec --recursive tests/**/*.test.js"
   },
   "homepage": "https://github.com/steplix/SteplixSequelize#readme",

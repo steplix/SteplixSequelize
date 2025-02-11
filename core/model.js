@@ -493,7 +493,7 @@ class Model {
             }
         }
         else {
-            const modelOptionRegExp = new RegExp(`${key}\.`, 'i');
+            const modelOptionRegExp = new RegExp(`${key}\\.`, 'i');
             const getRelationshipOptions = (options) => {
                 const replaced = _.map(options, (element) => {
                     if (modelOptionRegExp.test(element)) { return element.replace(modelOptionRegExp, ''); }
